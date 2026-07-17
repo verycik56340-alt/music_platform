@@ -1,0 +1,94 @@
+{% extends request.META.HTTP_HX_REQUEST|yesno:"blank.html,base.html" %}
+{% block title %}{{ album.title }} — Music Platform{% endblock %}
+{% block content %}
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="{% url 'home' %}" hx-get="{% url 'home' %}" hx-target="#main-content" hx-push-url="true">Home</a></li>
+        <li class="breadcrumb-item"><a href="{% url 'artist_detail' album.artist.pk %}" hx-get="{% url 'artist_detail' album.artist.pk %}" hx-target="#main-content" hx-push-url="true">{{ album.artist.user.username }}</a></li>
+        <li class="breadcrumb-item active" aria-current="page">{{ album.title }}</li>
+    </ol>
+</nav>
+<div class="card p-4 mb-4">
+    <div class="row align-items-center">
+        <div class="col-md-3">
+            {% if album.cover %}
+            <img src="{{ album.cover.url }}" class="img-fluid rounded" style="border-radius:12px;">
+            {% else %}
+            <div class="d-flex align-items-center justify-content-center" style="height:200px;background:var(--bg-elevated);border-radius:12px;font-size:2.5rem;">💿</div>
+            {% endif %}
+        </div>
+        <div class="col-md-9 mt-3 mt-md-0">
+            <p class="text-muted text-uppercase small mb-0">Album</p>
+            <h1>{{ album.title }}</h1>
+            <p class="text-secondary">Artist:
+                <a href="{% url 'artist_detail' album.artist.pk %}" hx-get="{% url 'artist_detail' album.artist.pk %}" hx-target="#main-content" hx-push-url="true">{{ album.artist.user.username }}</a>
+            </p>
+            {% if album.description %}<p class="text-secondary">{{ album.description }}</p>{% endif %}
+            <small class="text-muted">Release date: {{ album.release_date }}</small>
+        </div>
+    </div>
+</div>
+
+<h5 class="section-title">Tracks</h5>
+<div class="mb-5">
+    {% for track in tracks %}
+    <div class="track-item">
+        <div class="track-cover">♪</div>
+        <div class="flex-grow-1">
+            <a class="text-white fw-semibold text-decoration-none"
+               href="{% url 'track_detail' track.pk %}"
+               hx-get="{% url 'track_detail' track.pk %}"
+               hx-target="#main-content"
+               hx-push-url="true">{{ track.title }}</a>
+        </div>
+        <button class="btn btn-accent-sm" onclick="AudioController.loadTrack('{{ track.audio_file.url }}', '{{ track.title|escapejs }}')">▶ Play</button>
+        <a class="btn btn-outline-light btn-sm"
+           href="{% url 'track_detail' track.pk %}#comment-form"
+           hx-get="{% url 'track_detail' track.pk %}"
+           hx-target="#main-content"
+           hx-push-url="{% url 'track_detail' track.pk %}#comment-form">💬 Comment</a>
+    </div>
+    {% empty %}
+    <p class="empty">No tracks in this album yet.</p>
+    {% endfor %}
+</div>
+
+<div class="d-flex align-items-center justify-content-between">
+    <h5 class="section-title mb-0">Reviews</h5>
+    {% if user.is_authenticated %}
+    <a href="#review-form" class="btn btn-outline-light btn-sm">⭐ Leave a Review</a>
+    {% endif %}
+</div>
+<div id="reviews-section">
+    {% if reviews %}
+        {% for review in reviews %}
+        <div class="card p-3 mb-3">
+            <div class="d-flex justify-content-between">
+                <strong>{% if review.custom_user %}{{ review.custom_user.username }}{% else %}Deleted user{% endif %}</strong>
+                <span>{% if review.rating %}&#9733; {{ review.rating }}/10{% endif %}</span>
+            </div>
+            <small class="text-muted">{{ review.review_date }}</small>
+            <p class="text-secondary mb-0 mt-2">{{ review.review }}</p>
+        </div>
+        {% endfor %}
+    {% else %}
+    <p class="empty">No reviews yet.</p>
+    {% endif %}
+
+    {% if user.is_authenticated %}
+    <div class="card p-4" id="review-form">
+        <h6 class="mb-3">Leave a review</h6>
+        <form method="post"
+              hx-post="{% url 'album_detail' album.pk %}"
+              hx-target="#main-content"
+              hx-swap="innerHTML">
+            {% csrf_token %}
+            {{ form.as_p }}
+            <button type="submit" class="btn btn-accent">Submit Review</button>
+        </form>
+    </div>
+    {% else %}
+    <p><a href="{% url 'login' %}" hx-get="{% url 'login' %}" hx-target="#main-content" hx-push-url="true">Log in</a> to leave a review.</p>
+    {% endif %}
+</div>
+{% endblock %}

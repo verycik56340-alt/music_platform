@@ -1,0 +1,16 @@
+{% extends request.META.HTTP_HX_REQUEST|yesno:"blank.html,base.html" %}
+{% block title %}Log In — Music Platform{% endblock %}
+{% block content %}
+<div class="form-card">
+    <h3 class="text-center mb-4">Log In</h3>
+    <form method="post">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit" class="btn btn-accent w-100 py-2">Log In</button>
+    </form>
+    <p class="text-center mt-3 mb-0 text-secondary">
+        Don't have an account?
+        <a href="{% url 'register_viewer' %}" hx-get="{% url 'register_viewer' %}" hx-target="#main-content" hx-push-url="true">Register</a>
+    </p>
+</div>
+{% endblock %}

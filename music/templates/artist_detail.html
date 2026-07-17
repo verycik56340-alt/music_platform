@@ -1,0 +1,108 @@
+{% extends request.META.HTTP_HX_REQUEST|yesno:"blank.html,base.html" %}
+{% block title %}{{ artist.user.username }} — Music Platform{% endblock %}
+{% block content %}
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="{% url 'home' %}" hx-get="{% url 'home' %}" hx-target="#main-content" hx-push-url="true">Home</a></li>
+        <li class="breadcrumb-item active" aria-current="page">{{ artist.user.username }}</li>
+    </ol>
+</nav>
+<div class="card p-4 mb-4">
+    <div class="row align-items-center">
+        <div class="col-auto">
+            {% if artist.profile_picture %}
+            <img src="{{ artist.profile_picture.url }}" style="width:120px;height:120px;border-radius:50%;object-fit:cover;">
+            {% else %}
+            <div class="track-cover" style="width:120px;height:120px;border-radius:50%;font-size:2.5rem;">🎤</div>
+            {% endif %}
+        </div>
+        <div class="col">
+            <p class="text-muted text-uppercase small mb-0">Artist</p>
+            <h1 class="mb-2">{{ artist.user.username }}</h1>
+            {% if artist.bio %}
+            <p class="text-secondary">{{ artist.bio }}</p>
+            {% else %}
+            <p class="empty">The artist has not added any information yet.</p>
+            {% endif %}
+            <div class="d-flex flex-wrap gap-2">
+                {% if artist.spotify_link %}<a href="{{ artist.spotify_link }}" target="_blank" class="btn btn-outline-light btn-sm">Spotify</a>{% endif %}
+                {% if artist.soundcloud_link %}<a href="{{ artist.soundcloud_link }}" target="_blank" class="btn btn-outline-light btn-sm">SoundCloud</a>{% endif %}
+                {% if artist.telegram_link %}<a href="{{ artist.telegram_link }}" target="_blank" class="btn btn-outline-light btn-sm">Telegram</a>{% endif %}
+                {% if artist.social_media %}<a href="{{ artist.social_media }}" target="_blank" class="btn btn-outline-light btn-sm">Website</a>{% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<ul class="nav nav-pills mb-4">
+    <li class="nav-item">
+        <a class="nav-link {% if active_tab == 'albums' %}active btn-accent{% else %}btn-outline-light{% endif %} me-2"
+           href="{% url 'artist_detail' artist.pk %}?tab=albums"
+           hx-get="{% url 'artist_detail' artist.pk %}?tab=albums"
+           hx-target="#main-content"
+           hx-push-url="true">Albums</a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link {% if active_tab == 'tracks' %}active btn-accent{% else %}btn-outline-light{% endif %}"
+           href="{% url 'artist_detail' artist.pk %}?tab=tracks"
+           hx-get="{% url 'artist_detail' artist.pk %}?tab=tracks"
+           hx-target="#main-content"
+           hx-push-url="true">Tracks</a>
+    </li>
+</ul>
+
+{% if active_tab == 'albums' %}
+<div class="row row-cols-2 row-cols-md-4 g-3">
+    {% for album in albums %}
+    <div class="col">
+        <a class="card h-100 text-decoration-none"
+           href="{% url 'album_detail' album.pk %}"
+           hx-get="{% url 'album_detail' album.pk %}"
+           hx-target="#main-content"
+           hx-push-url="true">
+            {% if album.cover %}
+            <img src="{{ album.cover.url }}" class="card-img-top" style="height:140px;object-fit:cover;border-radius:12px 12px 0 0;">
+            {% else %}
+            <div class="d-flex align-items-center justify-content-center" style="height:140px;background:var(--bg-elevated);border-radius:12px 12px 0 0;">💿</div>
+            {% endif %}
+            <div class="card-body">
+                <h6 class="mb-0 text-white">{{ album.title }}</h6>
+                <small class="text-muted">{{ album.release_date }}</small>
+            </div>
+        </a>
+    </div>
+    {% empty %}
+    <p class="empty">The artist has no albums yet.</p>
+    {% endfor %}
+</div>
+
+{% else %}
+<div>
+    {% for track in tracks %}
+    <div class="track-item">
+        <div class="track-cover">♪</div>
+        <div class="flex-grow-1">
+            <a class="text-white fw-semibold text-decoration-none"
+               href="{% url 'track_detail' track.pk %}"
+               hx-get="{% url 'track_detail' track.pk %}"
+               hx-target="#main-content"
+               hx-push-url="true">{{ track.title }}</a>
+            {% if track.album %}
+            <div class="small text-muted">{{ track.album.title }}</div>
+            {% else %}
+            <div class="small text-muted">Single</div>
+            {% endif %}
+        </div>
+        <button class="btn btn-accent-sm" onclick="AudioController.loadTrack('{{ track.audio_file.url }}', '{{ track.title|escapejs }}')">▶ Play</button>
+        <a class="btn btn-outline-light btn-sm"
+           href="{% url 'track_detail' track.pk %}#comment-form"
+           hx-get="{% url 'track_detail' track.pk %}"
+           hx-target="#main-content"
+           hx-push-url="{% url 'track_detail' track.pk %}#comment-form">💬 Comment</a>
+    </div>
+    {% empty %}
+    <p class="empty">The artist has no tracks yet.</p>
+    {% endfor %}
+</div>
+{% endif %}
+{% endblock %}

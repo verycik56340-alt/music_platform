@@ -1,0 +1,25 @@
+{% extends request.META.HTTP_HX_REQUEST|yesno:"blank.html,base.html" %}
+{% block title %}{{ title }} — Music Platform{% endblock %}
+{% block content %}
+<div class="form-card">
+    <h3 class="text-center mb-4">{{ title }}</h3>
+    <form method="post" action="{% if title == 'Viewer Registration' %}{% url 'register_viewer' %}{% else %}{% url 'register_artist' %}{% endif %}">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit" class="btn btn-accent w-100 py-2">Register</button>
+    </form>
+    <p class="text-center mt-3 mb-1 text-secondary">
+        Already have an account?
+        <a href="{% url 'login' %}" hx-get="{% url 'login' %}" hx-target="#main-content" hx-push-url="true">Log in</a>
+    </p>
+    <p class="text-center mb-0 text-secondary">
+        {% if title == 'Viewer Registration' %}
+        Are you an artist?
+        <a href="{% url 'register_artist' %}" hx-get="{% url 'register_artist' %}" hx-target="#main-content" hx-push-url="true">Register as Artist</a>
+        {% else %}
+        Just a listener?
+        <a href="{% url 'register_viewer' %}" hx-get="{% url 'register_viewer' %}" hx-target="#main-content" hx-push-url="true">Register as Viewer</a>
+        {% endif %}
+    </p>
+</div>
+{% endblock %}

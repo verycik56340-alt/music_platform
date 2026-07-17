@@ -1,0 +1,77 @@
+{% extends request.META.HTTP_HX_REQUEST|yesno:"blank.html,base.html" %}
+{% block title %}{{ track.title }} — Music Platform{% endblock %}
+{% block content %}
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="{% url 'home' %}" hx-get="{% url 'home' %}" hx-target="#main-content" hx-push-url="true">Home</a></li>
+        {% if track.album %}
+        <li class="breadcrumb-item"><a href="{% url 'artist_detail' track.album.artist.pk %}" hx-get="{% url 'artist_detail' track.album.artist.pk %}" hx-target="#main-content" hx-push-url="true">{{ track.album.artist.user.username }}</a></li>
+        <li class="breadcrumb-item"><a href="{% url 'album_detail' track.album.pk %}" hx-get="{% url 'album_detail' track.album.pk %}" hx-target="#main-content" hx-push-url="true">{{ track.album.title }}</a></li>
+        {% endif %}
+        <li class="breadcrumb-item active" aria-current="page">{{ track.title }}</li>
+    </ol>
+</nav>
+
+<div class="card p-4 mb-4">
+    <div class="d-flex align-items-center gap-3 mb-3">
+        <div class="track-cover" style="width:70px;height:70px;font-size:1.8rem;">♪</div>
+        <div>
+            <h2 class="mb-0">{{ track.title }}</h2>
+            {% if track.album %}
+            <small class="text-secondary">
+                Album: <a href="{% url 'album_detail' track.album.pk %}" hx-get="{% url 'album_detail' track.album.pk %}" hx-target="#main-content" hx-push-url="true">{{ track.album.title }}</a>
+                &middot; Artist: <a href="{% url 'artist_detail' track.album.artist.pk %}" hx-get="{% url 'artist_detail' track.album.artist.pk %}" hx-target="#main-content" hx-push-url="true">{{ track.album.artist.user.username }}</a>
+            </small>
+            {% else %}
+            <small class="empty">Single (no album)</small>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="d-flex gap-2 mb-3">
+        <button class="btn btn-accent" onclick="AudioController.loadTrack('{{ track.audio_file.url }}', '{{ track.title|escapejs }}')">▶ Play Track</button>
+        <a href="#comment-form" class="btn btn-outline-light">💬 Leave a Comment</a>
+    </div>
+
+    {% if track.featuring.exists %}
+    <p class="text-secondary">Featuring:
+        {% for a in track.featuring.all %}
+            <a href="{% url 'artist_detail' a.pk %}" hx-get="{% url 'artist_detail' a.pk %}" hx-target="#main-content" hx-push-url="true">{{ a.user.username }}</a>{% if not forloop.last %}, {% endif %}
+        {% endfor %}
+    </p>
+    {% endif %}
+
+    {% if track.description %}<p class="text-secondary">{{ track.description }}</p>{% endif %}
+</div>
+
+<h5 class="section-title">💬 Comments</h5>
+<div id="comments-section">
+    {% if comments %}
+        {% for comment in comments %}
+        <div class="card p-3 mb-2">
+            <strong>{% if comment.custom_user %}{{ comment.custom_user.username }}{% else %}Deleted user{% endif %}</strong>
+            <small class="text-muted ms-2">{{ comment.comment_date }}</small>
+            <p class="text-secondary mb-0 mt-1">{{ comment.comment }}</p>
+        </div>
+        {% endfor %}
+    {% else %}
+    <p class="empty">No comments yet. Be the first!</p>
+    {% endif %}
+
+    {% if user.is_authenticated %}
+    <div class="card p-4 mt-3" id="comment-form">
+        <h6 class="mb-3">💬 Add a Comment</h6>
+        <form method="post"
+              hx-post="{% url 'track_detail' track.pk %}"
+              hx-target="#main-content"
+              hx-swap="innerHTML">
+            {% csrf_token %}
+            {{ form.as_p }}
+            <button type="submit" class="btn btn-accent">Submit Comment</button>
+        </form>
+    </div>
+    {% else %}
+    <p id="comment-form"><a href="{% url 'login' %}" hx-get="{% url 'login' %}" hx-target="#main-content" hx-push-url="true">Log in</a> to leave a comment.</p>
+    {% endif %}
+</div>
+{% endblock %}

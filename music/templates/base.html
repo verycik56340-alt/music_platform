@@ -1,0 +1,101 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>{% block title %}Music Platform{% endblock %}</title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+<script src="https://unpkg.com/htmx.org@1.9.12"></script>
+<style>
+  :root {
+    --bg-primary: #0d0f14;
+    --bg-surface: #151822;
+    --bg-elevated: #1e2230;
+    --accent: #7c5cff;
+    --accent-hover: #6a4ce0;
+    --text-primary: #f2f2f7;
+    --text-secondary: #a3a8bd;
+    --text-muted: #6c7186;
+    --border-subtle: #262b3a;
+  }
+  body { background: var(--bg-primary); color: var(--text-primary); font-family: 'Segoe UI', system-ui, sans-serif; padding-bottom: 90px; }
+  a { color: var(--accent); text-decoration: none; }
+  a:hover { color: var(--accent-hover); }
+  .navbar { background: var(--bg-surface) !important; border-bottom: 1px solid var(--border-subtle); }
+  .card { background: var(--bg-surface); border: none; border-radius: 12px; }
+  .form-card { background: var(--bg-surface); border-radius: 12px; padding: 2rem; max-width: 480px; margin: 2rem auto; }
+  .track-item { display: flex; align-items: center; gap: 1rem; padding: .75rem 1rem; background: var(--bg-surface); border-radius: 10px; margin-bottom: .5rem; }
+  .track-cover { width: 48px; height: 48px; border-radius: 8px; background: var(--bg-elevated); display: flex; align-items: center; justify-content: center; font-size: 1.25rem; color: var(--text-muted); flex-shrink: 0; }
+  .empty { color: var(--text-muted); }
+  .btn-accent { background: var(--accent); color: #fff; border: none; }
+  .btn-accent:hover { background: var(--accent-hover); color: #fff; }
+  .btn-accent-sm { background: var(--accent); color: #fff; border: none; border-radius: 20px; padding: .25rem .9rem; font-size: .8rem; }
+  .section-title { font-weight: 700; margin: 1.5rem 0 1rem; }
+  #player-bar { position: fixed; left: 0; right: 0; bottom: 0; background: var(--bg-surface); border-top: 1px solid var(--border-subtle); padding: .6rem 1rem; display: none; align-items: center; gap: 1rem; z-index: 1050; }
+  #player-bar audio { flex: 1; max-width: 500px; }
+  .breadcrumb { background: transparent; padding: 0; margin-bottom: 1.5rem; }
+  .breadcrumb-item, .breadcrumb-item a { color: var(--text-secondary); font-size: .9rem; }
+  .breadcrumb-item.active { color: var(--text-muted); }
+  .breadcrumb-item + .breadcrumb-item::before { color: var(--text-muted); }
+</style>
+</head>
+<body>
+<nav class="navbar navbar-expand">
+  <div class="container">
+    <a class="navbar-brand fw-bold" href="{% url 'home' %}" hx-get="{% url 'home' %}" hx-target="#main-content" hx-push-url="true">🎵 Music Platform</a>
+    <div class="ms-auto d-flex gap-3 align-items-center">
+      <a href="{% url 'home' %}" hx-get="{% url 'home' %}" hx-target="#main-content" hx-push-url="true">Home</a>
+      {% if user.is_authenticated %}
+        <span class="text-muted small">Hi, {{ user.username }}</span>
+        <form method="post" action="{% url 'logout' %}" class="d-inline">
+          {% csrf_token %}
+          <button type="submit" class="btn btn-link p-0 text-decoration-none" style="color: var(--accent); vertical-align: baseline;">Log out</button>
+        </form>
+      {% else %}
+        <a href="{% url 'register_viewer' %}" hx-get="{% url 'register_viewer' %}" hx-target="#main-content" hx-push-url="true">Register</a>
+        <a href="{% url 'register_artist' %}" hx-get="{% url 'register_artist' %}" hx-target="#main-content" hx-push-url="true">Become Artist</a>
+        <a href="{% url 'login' %}" hx-get="{% url 'login' %}" hx-target="#main-content" hx-push-url="true">Log in</a>
+      {% endif %}
+    </div>
+  </div>
+</nav>
+
+<main class="container py-4">
+  {% if user.is_authenticated and user.artist_status == 'pending' %}
+  <div class="alert alert-warning">Your artist application is still pending approval.</div>
+  {% endif %}
+  <div id="main-content">
+    {% block content %}{% endblock %}
+  </div>
+</main>
+
+<div id="player-bar">
+  <span id="player-title" class="text-truncate" style="max-width: 220px;"></span>
+  <audio id="global-audio" controls></audio>
+</div>
+
+<script>
+  const AudioController = {
+    loadTrack(url, title) {
+      const audio = document.getElementById('global-audio');
+      const bar = document.getElementById('player-bar');
+      const titleEl = document.getElementById('player-title');
+      audio.src = url;
+      titleEl.textContent = title;
+      bar.style.display = 'flex';
+      audio.play();
+    }
+  };
+
+  function scrollToHash() {
+    if (location.hash) {
+      const el = document.querySelector(location.hash);
+      if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+  }
+  document.body.addEventListener('htmx:afterSettle', scrollToHash);
+  document.addEventListener('DOMContentLoaded', scrollToHash);
+</script>
+</body>
+</html>

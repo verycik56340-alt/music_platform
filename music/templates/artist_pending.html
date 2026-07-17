@@ -1,0 +1,10 @@
+{% extends request.META.HTTP_HX_REQUEST|yesno:"blank.html,base.html" %}
+{% block title %}Application Sent — Music Platform{% endblock %}
+{% block content %}
+<div class="form-card text-center">
+    <div style="font-size: 3rem;">🎸</div>
+    <h3 class="mt-2">Application Sent!</h3>
+    <p class="text-secondary">Your artist request has been submitted and is waiting for approval by the site admin.</p>
+    <p class="text-secondary">You can already <a href="{% url 'login' %}" hx-get="{% url 'login' %}" hx-target="#main-content" hx-push-url="true">log in</a> as a regular viewer — once approved, your account will automatically switch to Artist.</p>
+</div>
+{% endblock %}

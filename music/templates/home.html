@@ -1,0 +1,57 @@
+{% extends request.META.HTTP_HX_REQUEST|yesno:"blank.html,base.html" %}
+{% block title %}Music Platform{% endblock %}
+{% block content %}
+<h1 class="section-title">Artists</h1>
+<div class="row row-cols-2 row-cols-md-4 g-3 mb-5">
+    {% for artist in artists %}
+    <div class="col">
+        <a class="card h-100 text-center text-decoration-none"
+           href="{% url 'artist_detail' artist.pk %}"
+           hx-get="{% url 'artist_detail' artist.pk %}"
+           hx-target="#main-content"
+           hx-push-url="true">
+            <div class="card-body">
+                {% if artist.profile_picture %}
+                <img src="{{ artist.profile_picture.url }}" style="width:90px;height:90px;border-radius:50%;object-fit:cover;" class="mb-2">
+                {% else %}
+                <div class="track-cover mx-auto mb-2" style="width:90px;height:90px;border-radius:50%;">🎤</div>
+                {% endif %}
+                <h6 class="mb-0 text-white">{{ artist.user.username }}</h6>
+                {% if artist.bio %}
+                <small class="text-muted">{{ artist.bio|truncatewords:10 }}</small>
+                {% else %}
+                <small class="empty">No info</small>
+                {% endif %}
+            </div>
+        </a>
+    </div>
+    {% empty %}
+    <p class="empty">No artists registered yet.</p>
+    {% endfor %}
+</div>
+
+<h2 class="section-title">Latest Albums</h2>
+<div class="row row-cols-2 row-cols-md-4 g-3">
+    {% for album in latest_albums %}
+    <div class="col">
+        <a class="card h-100 text-decoration-none"
+           href="{% url 'album_detail' album.pk %}"
+           hx-get="{% url 'album_detail' album.pk %}"
+           hx-target="#main-content"
+           hx-push-url="true">
+            {% if album.cover %}
+            <img src="{{ album.cover.url }}" class="card-img-top" style="height:140px;object-fit:cover;border-radius:12px 12px 0 0;">
+            {% else %}
+            <div class="d-flex align-items-center justify-content-center" style="height:140px;background:var(--bg-elevated);border-radius:12px 12px 0 0;">💿</div>
+            {% endif %}
+            <div class="card-body">
+                <h6 class="mb-0 text-white">{{ album.title }}</h6>
+                <small class="text-muted">{{ album.artist.user.username }} &middot; {{ album.release_date }}</small>
+            </div>
+        </a>
+    </div>
+    {% empty %}
+    <p class="empty">No albums yet.</p>
+    {% endfor %}
+</div>
+{% endblock %}
