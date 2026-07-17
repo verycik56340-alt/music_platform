@@ -13,7 +13,7 @@ def validate_file_size(value):
         raise ValidationError(f"Максимальний розмір файлу — {max_size_mb}MB.")
 
 def validate_audio_size(value):
-    max_size_mb = 30  # для аудіо
+    max_size_mb = 50  # для аудіо
     if value.size > max_size_mb * 1024 * 1024:
         raise ValidationError(f"Максимальний розмір файлу — {max_size_mb}MB.")
 
