@@ -25,10 +25,10 @@
             <p class="empty">The artist has not added any information yet.</p>
             {% endif %}
             <div class="d-flex flex-wrap gap-2">
-                {% if artist.spotify_link %}<a href="{{ artist.spotify_link }}" target="_blank" class="btn btn-outline-light btn-sm">Spotify</a>{% endif %}
-                {% if artist.soundcloud_link %}<a href="{{ artist.soundcloud_link }}" target="_blank" class="btn btn-outline-light btn-sm">SoundCloud</a>{% endif %}
-                {% if artist.telegram_link %}<a href="{{ artist.telegram_link }}" target="_blank" class="btn btn-outline-light btn-sm">Telegram</a>{% endif %}
-                {% if artist.social_media %}<a href="{{ artist.social_media }}" target="_blank" class="btn btn-outline-light btn-sm">Website</a>{% endif %}
+               {% if artist.spotify_link %}<a href="{{ artist.spotify_link }}" target="_blank" rel="noopener noreferrer" class="btn btn-outline-light btn-sm">Spotify</a>{% endif %}
+               {% if artist.soundcloud_link %}<a href="{{ artist.soundcloud_link }}" target="_blank" rel="noopener noreferrer" class="btn btn-outline-light btn-sm">SoundCloud</a>{% endif %}
+               {% if artist.telegram_link %}<a href="{{ artist.telegram_link }}" target="_blank" rel="noopener noreferrer" class="btn btn-outline-light btn-sm">Telegram</a>{% endif %}
+               {% if artist.social_media %}<a href="{{ artist.social_media }}" target="_blank" rel="noopener noreferrer" class="btn btn-outline-light btn-sm">Website</a>{% endif %}
             </div>
         </div>
     </div>
@@ -93,7 +93,7 @@
             <div class="small text-muted">Single</div>
             {% endif %}
         </div>
-        <button class="btn btn-accent-sm" onclick="AudioController.loadTrack('{{ track.audio_file.url }}', '{{ track.title|escapejs }}')">▶ Play</button>
+        <button class="btn btn-accent-sm" onclick="AudioController.loadTrack('{{ track.audio_file.url|escapejs }}', '{{ track.title|escapejs }}')">▶ Play</button>
         <a class="btn btn-outline-light btn-sm"
            href="{% url 'track_detail' track.pk %}#comment-form"
            hx-get="{% url 'track_detail' track.pk %}"

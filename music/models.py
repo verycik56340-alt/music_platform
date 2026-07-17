@@ -1,8 +1,28 @@
+import magic
 from django.contrib.auth.models import AbstractUser
 from django.db import models
 from django.conf import settings
 from django.core.validators import FileExtensionValidator, MinValueValidator, MaxValueValidator
 from cloudinary_storage.storage import RawMediaCloudinaryStorage
+from django.core.exceptions import ValidationError
+
+
+def validate_file_size(value):
+    max_size_mb = 10  # для картинок
+    if value.size > max_size_mb * 1024 * 1024:
+        raise ValidationError(f"Максимальний розмір файлу — {max_size_mb}MB.")
+
+def validate_audio_size(value):
+    max_size_mb = 30  # для аудіо
+    if value.size > max_size_mb * 1024 * 1024:
+        raise ValidationError(f"Максимальний розмір файлу — {max_size_mb}MB.")
+
+def validate_audio_mimetype(value):
+    valid_mime_types = ['audio/mpeg', 'audio/wav', 'audio/x-wav']
+    file_mime = magic.from_buffer(value.read(2048), mime=True)
+    value.seek(0)  # повернути курсор на початок файлу
+    if file_mime not in valid_mime_types:
+        raise ValidationError("Файл не є справжнім аудіофайлом (mp3/wav).")
 
 
 class CustomUser(AbstractUser):
@@ -31,7 +51,10 @@ class ArtistProfile(models.Model):
     )
 
     bio = models.TextField(blank=True, null=True)
-    profile_picture = models.ImageField(upload_to='artist_profiles/', blank=True, null=True)
+    profile_picture = models.ImageField(
+        upload_to='artist_profiles/', blank=True, null=True,
+        validators=[validate_file_size]
+    )
 
     social_media = models.URLField(blank=True, null=True)
     spotify_link = models.URLField(blank=True, null=True)
@@ -46,7 +69,7 @@ class Album(models.Model):
     artist = models.ForeignKey(ArtistProfile, on_delete=models.CASCADE, related_name='albums')
     title = models.CharField(max_length=200)
     description = models.TextField(blank=True, null=True)
-    cover = models.ImageField(upload_to='album_covers/')
+    cover = models.ImageField(upload_to='album_covers/', validators=[validate_file_size])
     release_date = models.DateField()
 
     def __str__(self):
@@ -66,7 +89,11 @@ class Track(models.Model):
     audio_file = models.FileField(
         upload_to='tracks/',
         storage=RawMediaCloudinaryStorage(),
-        validators=[FileExtensionValidator(allowed_extensions=['mp3', 'wav'])],
+        validators=[
+            FileExtensionValidator(allowed_extensions=['mp3', 'wav']),
+            validate_audio_size,
+            validate_audio_mimetype,
+        ],
         verbose_name="Audio File"
     )
     description = models.TextField(blank=True, verbose_name="Track Description")

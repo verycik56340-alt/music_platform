@@ -41,7 +41,7 @@
                hx-target="#main-content"
                hx-push-url="true">{{ track.title }}</a>
         </div>
-        <button class="btn btn-accent-sm" onclick="AudioController.loadTrack('{{ track.audio_file.url }}', '{{ track.title|escapejs }}')">▶ Play</button>
+        <button class="btn btn-accent-sm" onclick="AudioController.loadTrack('{{ track.audio_file.url|escapejs }}', '{{ track.title|escapejs }}')">▶ Play</button>
         <a class="btn btn-outline-light btn-sm"
            href="{% url 'track_detail' track.pk %}#comment-form"
            hx-get="{% url 'track_detail' track.pk %}"

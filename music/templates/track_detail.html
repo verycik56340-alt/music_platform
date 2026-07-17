@@ -29,7 +29,7 @@
     </div>
 
     <div class="d-flex gap-2 mb-3">
-        <button class="btn btn-accent" onclick="AudioController.loadTrack('{{ track.audio_file.url }}', '{{ track.title|escapejs }}')">▶ Play Track</button>
+        <button class="btn btn-accent" onclick="AudioController.loadTrack('{{ track.audio_file.url|escapejs }}', '{{ track.title|escapejs }}')">▶ Play Track</button>
         <a href="#comment-form" class="btn btn-outline-light">💬 Leave a Comment</a>
     </div>
 
