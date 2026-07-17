@@ -132,7 +132,7 @@ LOGIN_REDIRECT_URL = 'home'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 
 CSRF_TRUSTED_ORIGINS = [
-    'https://your-app-name.onrender.com',
+    'https://music-platform-03yv.onrender.com',
 ]
 
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
