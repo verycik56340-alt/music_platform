@@ -2,6 +2,7 @@ from django.contrib.auth.models import AbstractUser
 from django.db import models
 from django.conf import settings
 from django.core.validators import FileExtensionValidator, MinValueValidator, MaxValueValidator
+from cloudinary_storage.storage import RawMediaCloudinaryStorage
 
 
 class CustomUser(AbstractUser):
@@ -64,6 +65,7 @@ class Track(models.Model):
     title = models.CharField(max_length=255, verbose_name="Track Title")
     audio_file = models.FileField(
         upload_to='tracks/',
+        storage=RawMediaCloudinaryStorage(),
         validators=[FileExtensionValidator(allowed_extensions=['mp3', 'wav'])],
         verbose_name="Audio File"
     )
