@@ -33,9 +33,9 @@ ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', '').split(',') if os.environ.get
 # Application definition
 
 INSTALLED_APPS = [
-    'cloudinary_storage',
+    #'cloudinary_storage',
     'music',
-    'cloudinary',
+    #'cloudinary',
 
     'django.contrib.admin',
     'django.contrib.auth',
