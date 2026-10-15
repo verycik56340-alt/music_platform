@@ -3,7 +3,6 @@ from django.contrib.auth.models import AbstractUser
 from django.db import models
 from django.conf import settings
 from django.core.validators import FileExtensionValidator, MinValueValidator, MaxValueValidator
-from cloudinary_storage.storage import RawMediaCloudinaryStorage
 from django.core.exceptions import ValidationError
 
 
@@ -13,7 +12,7 @@ def validate_file_size(value):
         raise ValidationError(f"Максимальний розмір файлу — {max_size_mb}MB.")
 
 def validate_audio_size(value):
-    max_size_mb = 50  # для аудіо
+    max_size_mb = 50
     if value.size > max_size_mb * 1024 * 1024:
         raise ValidationError(f"Максимальний розмір файлу — {max_size_mb}MB.")
 
@@ -88,7 +87,6 @@ class Track(models.Model):
     title = models.CharField(max_length=255, verbose_name="Track Title")
     audio_file = models.FileField(
         upload_to='tracks/',
-        storage=RawMediaCloudinaryStorage(),
         validators=[
             FileExtensionValidator(allowed_extensions=['mp3', 'wav']),
             validate_audio_size,

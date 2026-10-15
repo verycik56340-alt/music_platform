@@ -10,6 +10,9 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/6.0/ref/settings/
 """
 import os
+
+from dotenv import load_dotenv
+
 import dj_database_url
 
 from pathlib import Path
@@ -17,30 +20,41 @@ from pathlib import Path
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
+# Завантажити змінні середовища з .env (створіть .env за прикладом .env.example)
+load_dotenv(BASE_DIR / '.env')
+
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/6.0/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-if os.environ.get('RENDER'):
-    # На проді - обов'язково з env, без фолбеку
-    SECRET_KEY = os.environ['SECRET_KEY']
-else:
-    # Локально - можна дефолт для зручності розробки
-    SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-local-dev-only')
+DEBUG = os.environ.get('DEBUG', 'False').lower() in ('1', 'true', 'yes')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False
+if DEBUG:
+    # Локально - дефолт для зручності розробки
+    SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-local-dev-only')
+else:
+    # На сервері - обов'язково з env, без фолбеку
+    SECRET_KEY = os.environ['SECRET_KEY']
 
-ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', 'localhost,127.0.0.1').split(',')
+ALLOWED_HOSTS = os.environ.get(
+    'ALLOWED_HOSTS', 'localhost,127.0.0.1'
+).split(',')
+
+CSRF_TRUSTED_ORIGINS = [
+    origin.strip()
+    for origin in os.environ.get(
+        'CSRF_TRUSTED_ORIGINS', 'http://localhost:8000'
+    ).split(',')
+    if origin.strip()
+]
 
 
 # Application definition
 
 INSTALLED_APPS = [
-    #'cloudinary_storage',
     'music',
-    #'cloudinary',
     'axes',
 
     'django.contrib.admin',
@@ -51,22 +65,14 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
 ]
 
-CLOUDINARY_STORAGE = {
-    'CLOUD_NAME': os.environ.get('CLOUDINARY_CLOUD_NAME'),
-    'API_KEY': os.environ.get('CLOUDINARY_API_KEY'),
-    'API_SECRET': os.environ.get('CLOUDINARY_API_SECRET'),
-}
-
 STORAGES = {
     "default": {
-        "BACKEND": "cloudinary_storage.storage.MediaCloudinaryStorage",
+        "BACKEND": "django.core.files.storage.FileSystemStorage",
     },
     "staticfiles": {
         "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
     },
 }
-
-STATICFILES_STORAGE = "django.contrib.staticfiles.storage.StaticFilesStorage"
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -156,7 +162,7 @@ USE_TZ = True
 STATIC_URL = 'static/'
 
 MEDIA_URL = '/media/'
-MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+MEDIA_ROOT = BASE_DIR / 'media'
 
 AUTH_USER_MODEL = 'music.CustomUser'
 
@@ -165,24 +171,27 @@ LOGIN_REDIRECT_URL = 'home'
 
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 
-CSRF_TRUSTED_ORIGINS = [
-    'https://music-platform-03yv.onrender.com',
-]
-
+# Django за reverse-proxy (nginx) - довіряти заголовку X-Forwarded-Proto
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 
-SECURE_SSL_REDIRECT = True
-SESSION_COOKIE_SECURE = True
-CSRF_COOKIE_SECURE = True
+# HTTPS / безпека cookies.
+# Локально (DEBUG=True) - все вимкнено, щоб працювало по http://localhost:8000.
+# На сервері (DEBUG=False) - ввімкнено за замовчуванням.
+# SECURE_SSL_REDIRECT можна вимкнути окремо (env SECURE_SSL_REDIRECT=False),
+# якщо SSL термінується на nginx і до Django приходить http.
+SECURE_SSL_REDIRECT = os.environ.get(
+    'SECURE_SSL_REDIRECT', str(not DEBUG)
+).lower() in ('1', 'true', 'yes')
 
-# Додатковий захист cookies
+SESSION_COOKIE_SECURE = not DEBUG
+CSRF_COOKIE_SECURE = not DEBUG
+
 SESSION_COOKIE_HTTPONLY = True
 CSRF_COOKIE_HTTPONLY = True
 
 # HSTS - каже браузеру завжди використовувати HTTPS для цього домену
-SECURE_HSTS_SECONDS = 31536000
-SECURE_HSTS_INCLUDE_SUBDOMAINS = True
-SECURE_HSTS_PRELOAD = True
+SECURE_HSTS_SECONDS = 0 if DEBUG else 31536000
+SECURE_HSTS_INCLUDE_SUBDOMAINS = not DEBUG
 
 # Захист від clickjacking (вже є через middleware, але явно теж можна)
 X_FRAME_OPTIONS = 'DENY'
