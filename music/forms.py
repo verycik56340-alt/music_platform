@@ -16,9 +16,9 @@ class ArtistCreationForm(UserCreationForm):
 
     def save(self, commit=True):
         user = super().save(commit=False)
-        user.is_artist = False          # НЕ артист, пока не одобрят
+        user.is_artist = False          # NOT an artist until approved
         user.is_viewer = True
-        user.artist_status = 'pending'  # ждёт одобрения
+        user.artist_status = 'pending'  # awaiting approval
         if commit:
             user.save()
         return user

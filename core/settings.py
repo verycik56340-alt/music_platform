@@ -20,7 +20,7 @@ from pathlib import Path
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-# Завантажити змінні середовища з .env (створіть .env за прикладом .env.example)
+# Load environment variables from .env (create .env based on .env.example)
 load_dotenv(BASE_DIR / '.env')
 
 
@@ -32,10 +32,10 @@ DEBUG = os.environ.get('DEBUG', 'False').lower() in ('1', 'true', 'yes')
 
 # SECURITY WARNING: don't run with debug turned on in production!
 if DEBUG:
-    # Локально - дефолт для зручності розробки
+    # Locally - a default for development convenience
     SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-local-dev-only')
 else:
-    # На сервері - обов'язково з env, без фолбеку
+    # On the server - required from env, no fallback
     SECRET_KEY = os.environ['SECRET_KEY']
 
 ALLOWED_HOSTS = [
@@ -85,7 +85,7 @@ MIDDLEWARE = [
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
-    'axes.middleware.AxesMiddleware',  # ← додати в кінець
+    'axes.middleware.AxesMiddleware',  # add at the end
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
@@ -176,27 +176,27 @@ LOGIN_REDIRECT_URL = 'home'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 
 # === Reverse-proxy (nginx) ===
-# False - Django працює напряму (локальна розробка).
-# True  - за nginx: IP клієнта береться з X-Real-IP, схема - з X-Forwarded-Proto.
+# False - Django runs directly (local development).
+# True  - behind nginx: the client IP is taken from X-Real-IP, the scheme from X-Forwarded-Proto.
 BEHIND_PROXY = os.environ.get('BEHIND_PROXY', 'False').lower() in ('1', 'true', 'yes')
 
 if BEHIND_PROXY:
-    # Довіряти X-Forwarded-Proto (nginx зобов'язаний перезаписувати цей заголовок,
-    # інакше клієнт може підмінити його напряму до gunicorn).
+    # Trust X-Forwarded-Proto (nginx must overwrite this header,
+    # otherwise a client could spoof it directly to gunicorn).
     SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 
-    # django-axes: реальний IP клієнта за проксі.
+    # django-axes: the real client IP behind the proxy.
     AXES_CLIENT_IP_CALLABLE = 'core.proxy.get_client_ip'
 
-    # django-ratelimit: dotted path функції. Рядок типу 'HTTP_X_REAL_IP'
-    # не підходить - за відсутності заголовка це ImproperlyConfigured і 500.
+    # django-ratelimit: dotted path to the function. A value like 'HTTP_X_REAL_IP'
+    # does not work - when the header is missing it causes ImproperlyConfigured and a 500.
     RATELIMIT_IP_META_KEY = 'core.proxy.get_client_ip'
 
-# HTTPS / безпека cookies.
-# Локально (DEBUG=True) - все вимкнено, щоб працювало по http://localhost:8000.
-# На сервері (DEBUG=False) - ввімкнено за замовчуванням.
-# SECURE_SSL_REDIRECT можна вимкнути окремо (env SECURE_SSL_REDIRECT=False),
-# якщо SSL термінується на nginx і до Django приходить http.
+# HTTPS / cookie security.
+# Locally (DEBUG=True) - everything is disabled so it works over http://localhost:8000.
+# On the server (DEBUG=False) - enabled by default.
+# SECURE_SSL_REDIRECT can be disabled separately (env SECURE_SSL_REDIRECT=False)
+# if SSL terminates at nginx and Django receives http.
 SECURE_SSL_REDIRECT = os.environ.get(
     'SECURE_SSL_REDIRECT', str(not DEBUG)
 ).lower() in ('1', 'true', 'yes')
@@ -207,9 +207,9 @@ CSRF_COOKIE_SECURE = not DEBUG
 SESSION_COOKIE_HTTPONLY = True
 CSRF_COOKIE_HTTPONLY = True
 
-# HSTS - каже браузеру завжди використовувати HTTPS для цього домену
+# HSTS - tells the browser to always use HTTPS for this domain
 SECURE_HSTS_SECONDS = 0 if DEBUG else 31536000
 SECURE_HSTS_INCLUDE_SUBDOMAINS = not DEBUG
 
-# Захист від clickjacking (вже є через middleware, але явно теж можна)
+# Clickjacking protection (already provided by middleware, but can be set explicitly too)
 X_FRAME_OPTIONS = 'DENY'

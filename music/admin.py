@@ -46,7 +46,7 @@ class TrackCommentAdmin(admin.ModelAdmin):
 
 @admin.register(CustomUser)
 class CustomUserAdmin(UserAdmin):
-    # показывает ВСЕХ пользователей (viewer + artist + pending) — фильтруй справа
+    # shows ALL users (viewer + artist + pending) — filter on the right
     list_display = ('username', 'email', 'artist_status', 'is_artist', 'is_staff', 'date_joined')
     list_filter = ('artist_status', 'is_artist', 'is_staff')
     ordering = ('-date_joined',)

@@ -50,7 +50,7 @@ def album_detail(request, pk):
                 review.custom_user = request.user
                 review.review_date = timezone.now().date()
                 review.save()
-                form = AlbumReviewForm()  # пустая форма после успешной отправки
+                form = AlbumReviewForm()  # empty form after a successful submit
         else:
             form = AlbumReviewForm()
 
@@ -82,7 +82,7 @@ def track_detail(request, pk):
                 comment.custom_user = request.user
                 comment.comment_date = timezone.now().date()
                 comment.save()
-                form = TrackCommentForm()  # пустая форма после успешной отправки
+                form = TrackCommentForm()  # empty form after a successful submit
         else:
             form = TrackCommentForm()
 
@@ -112,7 +112,7 @@ def register_viewer(request):
 @ratelimit(key='ip', rate='5/m', block=True, method=UNSAFE)
 def register_artist(request):
     if request.user.is_authenticated:
-        return redirect('home')  # вже залогінений - йому реєстрація не потрібна
+        return redirect('home')  # already logged in - no registration needed
     if request.method == 'POST':
         form = ArtistCreationForm(request.POST)
         if form.is_valid():

@@ -8,7 +8,7 @@ django-ratelimit==4.1.0
 gunicorn==26.0.0
 idna==3.18
 packaging==26.2
-# python-magic вимагає системну бібліотеку libmagic:
+# python-magic requires the system libmagic library:
 #   Linux (Debian/Ubuntu): libmagic1 | NixOS: nix-shell -p file
 #   macOS: brew install libmagic | Windows: pip install python-magic-bin
 pillow==12.3.0
