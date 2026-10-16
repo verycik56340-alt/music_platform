@@ -62,41 +62,15 @@ python manage.py createsuperuser
 python manage.py runserver
 ```
 
-Open http://localhost:8000 and sign in (or use `/admin/` with the superuser to moderate artists and add albums/tracks).
-
-There is no demo data in the repository (`db.sqlite3` and `media/` are gitignored), so after `createsuperuser` log in to `/admin/` and create an artist (approve their pending application via the bulk action), an album, and a track — otherwise the catalog pages are empty.
-
-## Running on Linux
-
-**Debian / Ubuntu**
-
-```bash
-sudo apt update
-sudo apt install -y git python3 python3-venv python3-pip libmagic1
-
-git clone https://github.com/verycik56340-alt/music_platform.git
-cd music_platform
-
-python3 -m venv venv
-source venv/bin/activate
-pip install -r requirements.txt
-
-cp .env.example .env        # DEBUG=True for local development
-python manage.py migrate
-python manage.py createsuperuser
-python manage.py runserver
-```
-
-Other distributions: install the libmagic package instead of `libmagic1`
-(Fedora: `sudo dnf install file-libs`, Arch: `sudo pacman -S file`).
-
 **NixOS**
 
 ```bash
 nix-shell -p file --run 'export LD_LIBRARY_PATH="$(dirname "$(readlink -f "$(command -v file)")")/../lib"; ./venv/bin/python manage.py runserver'
 ```
 
-Open http://127.0.0.1:8000, then log in to `/admin/` to create content.
+Open http://localhost:8000 and sign in (or use `/admin/` with the superuser to moderate artists and add albums/tracks).
+
+There is no demo data in the repository (`db.sqlite3` and `media/` are gitignored), so after `createsuperuser` log in to `/admin/` and create an artist (approve their pending application via the bulk action), an album, and a track — otherwise the catalog pages are empty.
 
 ## Configuration
 
