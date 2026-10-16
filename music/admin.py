@@ -18,6 +18,7 @@ class ArtistProfileAdmin(admin.ModelAdmin):
 class AlbumAdmin(admin.ModelAdmin):
     list_display = ('title', 'artist', 'release_date')
     list_filter = ('release_date', 'artist')
+    list_select_related = ('artist__user',)
     search_fields = ('title', 'artist__user__username')
     inlines = [TrackInline]
 
