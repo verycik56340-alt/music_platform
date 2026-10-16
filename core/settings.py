@@ -171,8 +171,22 @@ LOGIN_REDIRECT_URL = 'home'
 
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 
-# Django за reverse-proxy (nginx) - довіряти заголовку X-Forwarded-Proto
-SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+# === Reverse-proxy (nginx) ===
+# False - Django працює напряму (локальна розробка).
+# True  - за nginx: IP клієнта береться з X-Real-IP, схема - з X-Forwarded-Proto.
+BEHIND_PROXY = os.environ.get('BEHIND_PROXY', 'False').lower() in ('1', 'true', 'yes')
+
+if BEHIND_PROXY:
+    # Довіряти X-Forwarded-Proto (nginx зобов'язаний перезаписувати цей заголовок,
+    # інакше клієнт може підмінити його напряму до gunicorn).
+    SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+
+    # django-axes: реальний IP клієнта за проксі.
+    AXES_CLIENT_IP_CALLABLE = 'core.proxy.get_client_ip'
+
+    # django-ratelimit: dotted path функції. Рядок типу 'HTTP_X_REAL_IP'
+    # не підходить - за відсутності заголовка це ImproperlyConfigured і 500.
+    RATELIMIT_IP_META_KEY = 'core.proxy.get_client_ip'
 
 # HTTPS / безпека cookies.
 # Локально (DEBUG=True) - все вимкнено, щоб працювало по http://localhost:8000.
