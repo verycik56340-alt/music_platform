@@ -9,19 +9,19 @@ from django.core.exceptions import ValidationError
 def validate_file_size(value):
     max_size_mb = 10  # for images
     if value.size > max_size_mb * 1024 * 1024:
-        raise ValidationError(f"Максимальний розмір файлу — {max_size_mb}MB.")
+        raise ValidationError(f"Maximum file size — {max_size_mb}MB.")
 
 def validate_audio_size(value):
     max_size_mb = 50
     if value.size > max_size_mb * 1024 * 1024:
-        raise ValidationError(f"Максимальний розмір файлу — {max_size_mb}MB.")
+        raise ValidationError(f"Maximum file size — {max_size_mb}MB.")
 
 def validate_audio_mimetype(value):
     valid_mime_types = ['audio/mpeg', 'audio/wav', 'audio/x-wav']
     file_mime = magic.from_buffer(value.read(2048), mime=True)
     value.seek(0)  # reset the cursor to the beginning of the file
     if file_mime not in valid_mime_types:
-        raise ValidationError("Файл не є справжнім аудіофайлом (mp3/wav).")
+        raise ValidationError("The file is not a real audio file (mp3/wav).")
 
 
 class CustomUser(AbstractUser):
