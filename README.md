@@ -1,6 +1,9 @@
 # Music Platform
 
-A Django-based music platform where artists publish albums and tracks, and listeners stream them, leave rated reviews, and discuss songs in comments. The app features two registration roles (listener and artist with admin moderation), a global sticky audio player, and an HTMX-powered dark UI with fast partial page navigation.
+A Django-based music platform with a public catalog of artists, albums and tracks.
+Listeners stream music through a global audio player, leave rated album reviews and
+comment on tracks. Content is managed by admins through Django admin; artists apply
+through a moderated registration flow.
 
 ## Screenshots
 
@@ -28,7 +31,7 @@ A Django-based music platform where artists publish albums and tracks, and liste
 
 | Component | Version |
 |---|---|
-| Python | 3.14 |
+| Python | 3.12+ (developed on 3.14) |
 | Django | 6.0.7 |
 | Database | SQLite (dev) / PostgreSQL via `dj-database-url` + psycopg 3 |
 | Server | gunicorn + WhiteNoise |
@@ -38,7 +41,7 @@ A Django-based music platform where artists publish albums and tracks, and liste
 ## Getting started (local)
 
 ```bash
-git clone <your-repo-url>
+git clone https://github.com/verycik56340-alt/music_platform.git
 cd music_platform
 
 python -m venv venv
@@ -46,7 +49,7 @@ source venv/bin/activate          # Windows: venv\Scripts\activate
 
 pip install -r requirements.txt
 
-cp .env.example .env              # defaults are fine for local dev (DEBUG=True)
+cp .env.example .env  # required: sets DEBUG=True for local development
 
 # System library for python-magic (MIME validation of audio files):
 #   Linux (Debian/Ubuntu): sudo apt install libmagic1
@@ -60,6 +63,8 @@ python manage.py runserver
 ```
 
 Open http://localhost:8000 and sign in (or use `/admin/` with the superuser to moderate artists and add albums/tracks).
+
+There is no demo data in the repository (`db.sqlite3` and `media/` are gitignored), so after `createsuperuser` log in to `/admin/` and create an artist (approve their pending application via the bulk action), an album, and a track — otherwise the catalog pages are empty.
 
 ## Configuration
 
@@ -98,7 +103,7 @@ All settings come from environment variables loaded by python-dotenv from `.env`
    }
    ```
 
-6. If TLS is terminated at nginx (Django receives plain HTTP from the proxy), set `SECURE_SSL_REDIRECT=False` to avoid redirect loops — Django still marks cookies as secure and trusts `X-Forwarded-Proto`.
+6. If TLS is terminated at nginx (Django receives plain HTTP from the proxy), set `SECURE_SSL_REDIRECT=False` to avoid redirect loops. Django still marks cookies as secure, and `SECURE_PROXY_SSL_HEADER` is configured to trust the `X-Forwarded-Proto` header.
 
 ## Project structure
 
@@ -121,3 +126,9 @@ music_platform/
 ├── .env.example
 └── manage.py
 ```
+
+## Known limitations
+
+- Artists cannot upload content themselves; albums and tracks are managed through Django admin.
+- Users can post multiple reviews per album and multiple comments per track (no uniqueness constraint, no edit/delete in the UI).
+- Rate limiting and brute-force protection use the default in-process cache, so counters are per gunicorn worker; use Redis or Memcached for multi-worker deployments.
