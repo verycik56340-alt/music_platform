@@ -3,6 +3,7 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.utils import timezone
 from .models import ArtistProfile, Album, Track, AlbumReview, TrackComment
 from .forms import ViewerCreationForm, ArtistCreationForm, AlbumReviewForm, TrackCommentForm
+from django_ratelimit import UNSAFE
 from django_ratelimit.decorators import ratelimit
 
 
@@ -34,7 +35,7 @@ def artist_detail(request, pk):
     })
 
 
-@ratelimit(key='ip', rate='30/h', block=True)
+@ratelimit(key='ip', rate='30/h', block=True, method=UNSAFE)
 def album_detail(request, pk):
     album = get_object_or_404(Album.objects.select_related('artist__user'), pk=pk)
     tracks = album.tracks.all()
@@ -63,7 +64,7 @@ def album_detail(request, pk):
     })
 
 
-@ratelimit(key='ip', rate='60/h', block=True)
+@ratelimit(key='ip', rate='60/h', block=True, method=UNSAFE)
 def track_detail(request, pk):
     track = get_object_or_404(
         Track.objects.select_related('album__artist__user')
@@ -94,7 +95,7 @@ def track_detail(request, pk):
     })
 
 
-@ratelimit(key='ip', rate='5/m', block=True)
+@ratelimit(key='ip', rate='5/m', block=True, method=UNSAFE)
 def register_viewer(request):
     if request.user.is_authenticated:
         return redirect('home')
@@ -108,7 +109,7 @@ def register_viewer(request):
     return render(request, 'register.html', {'form': form, 'title': 'Viewer Registration'})
 
 
-@ratelimit(key='ip', rate='5/m', block=True)
+@ratelimit(key='ip', rate='5/m', block=True, method=UNSAFE)
 def register_artist(request):
     if request.user.is_authenticated:
         return redirect('home')  # вже залогінений - йому реєстрація не потрібна
