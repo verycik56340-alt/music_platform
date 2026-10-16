@@ -23,7 +23,7 @@ through a moderated registration flow.
 - **Track comments** — authenticated users discuss individual tracks; deleted accounts render as "Deleted user" instead of breaking the page.
 - **Global audio player** — a fixed bottom player bar; *Play* buttons on album, artist, and track pages load the track into the same `<audio>` element and keep playing while navigating.
 - **Audio file validation** — every uploaded track is checked for allowed extensions (`mp3`, `wav`), a 50 MB size limit, and the real MIME type sniffed with **python-magic** (`audio/mpeg`, `audio/wav`, `audio/x-wav`), so renamed non-audio files are rejected. Image uploads are capped at 10 MB.
-- **Brute-force protection** — **django-axes** blocks login attempts (5 failures, 1-hour cool-off) via its middleware and standalone auth backend, and **django-ratelimit** rate-limits hot endpoints per IP: album page 30/h, track page 60/h, registration 5/min.
+- **Brute-force protection** — **django-axes** blocks login attempts (5 failures, 1-hour cool-off) via its middleware and standalone auth backend, and **django-ratelimit** rate-limits form submissions per IP (POST requests only, ordinary page views are not throttled): album reviews 30/h, track comments 60/h, registration 5/min.
 - **HTMX front-end** — navigation and forms swap only the main content fragment (`hx-get`/`hx-post`), with a `blank.html` partial layout for responses and URL push for full history support.
 - **Hardened production settings** — WhiteNoise for static files, HTTPS-only cookies and HSTS when `DEBUG=False`, CSRF trusted origins and host allow-list from environment variables.
 
@@ -66,6 +66,38 @@ Open http://localhost:8000 and sign in (or use `/admin/` with the superuser to m
 
 There is no demo data in the repository (`db.sqlite3` and `media/` are gitignored), so after `createsuperuser` log in to `/admin/` and create an artist (approve their pending application via the bulk action), an album, and a track — otherwise the catalog pages are empty.
 
+## Running on Linux
+
+**Debian / Ubuntu**
+
+```bash
+sudo apt update
+sudo apt install -y git python3 python3-venv python3-pip libmagic1
+
+git clone https://github.com/verycik56340-alt/music_platform.git
+cd music_platform
+
+python3 -m venv venv
+source venv/bin/activate
+pip install -r requirements.txt
+
+cp .env.example .env        # DEBUG=True for local development
+python manage.py migrate
+python manage.py createsuperuser
+python manage.py runserver
+```
+
+Other distributions: install the libmagic package instead of `libmagic1`
+(Fedora: `sudo dnf install file-libs`, Arch: `sudo pacman -S file`).
+
+**NixOS**
+
+```bash
+nix-shell -p file --run 'export LD_LIBRARY_PATH="$(dirname "$(readlink -f "$(command -v file)")")/../lib"; ./venv/bin/python manage.py runserver'
+```
+
+Open http://127.0.0.1:8000, then log in to `/admin/` to create content.
+
 ## Configuration
 
 All settings come from environment variables loaded by python-dotenv from `.env` (see `.env.example`):
@@ -78,6 +110,7 @@ All settings come from environment variables loaded by python-dotenv from `.env`
 | `CSRF_TRUSTED_ORIGINS` | Comma-separated origins trusted for CSRF (scheme + host) | `http://localhost:8000` | `https://your.domain` |
 | `DATABASE_URL` | Database URL; falls back to local `db.sqlite3` | unset (SQLite) | `postgres://user:pass@host:5432/dbname` |
 | `SECURE_SSL_REDIRECT` | Force HTTPS redirects; defaults to `on` when `DEBUG=False` | `False` | `True`, or `False` if TLS terminates at nginx |
+| `BEHIND_PROXY` | App runs behind a reverse proxy: client IP is read from `X-Real-IP` (axes + django-ratelimit) and `X-Forwarded-Proto` is trusted | `False` | `True` when nginx is in front |
 
 ## Deployment
 
@@ -103,7 +136,14 @@ All settings come from environment variables loaded by python-dotenv from `.env`
    }
    ```
 
-6. If TLS is terminated at nginx (Django receives plain HTTP from the proxy), set `SECURE_SSL_REDIRECT=False` to avoid redirect loops. Django still marks cookies as secure, and `SECURE_PROXY_SSL_HEADER` is configured to trust the `X-Forwarded-Proto` header.
+6. If the app runs behind a reverse proxy (TLS terminated at nginx, Django receives plain HTTP), set `BEHIND_PROXY=True` and `SECURE_SSL_REDIRECT=False` to avoid redirect loops. With `BEHIND_PROXY=True` nginx **must overwrite** the forwarding headers so a client cannot spoof them:
+
+   ```nginx
+   proxy_set_header X-Forwarded-Proto $scheme;
+   proxy_set_header X-Real-IP $remote_addr;
+   ```
+
+   Correspondingly, gunicorn **must not be reachable from the outside directly** — otherwise headers can be forged and the real client IP / scheme trusted blindly. Bind gunicorn to `127.0.0.1` and expose only nginx.
 
 ## Project structure
 
@@ -111,7 +151,7 @@ All settings come from environment variables loaded by python-dotenv from `.env`
 music_platform/
 ├── core/
 │   ├── settings.py          # env-driven settings (dotenv, DEBUG, security)
-│   ├── urls.py              # admin + auth + app routes, /media/ in dev
+│   ├── urls.py              # admin + app routes, /media/ in dev
 │   ├── wsgi.py / asgi.py
 ├── music/
 │   ├── models.py            # CustomUser, ArtistProfile, Album, Track, reviews, comments
@@ -131,4 +171,4 @@ music_platform/
 
 - Artists cannot upload content themselves; albums and tracks are managed through Django admin.
 - Users can post multiple reviews per album and multiple comments per track (no uniqueness constraint, no edit/delete in the UI).
-- Rate limiting and brute-force protection use the default in-process cache, so counters are per gunicorn worker; use Redis or Memcached for multi-worker deployments.
+- Rate limits apply only to unsafe methods (POST/PUT/PATCH/DELETE), so normal page views are never blocked; brute-force protection and rate limiting use the default in-process cache, so counters are per gunicorn worker — use Redis or Memcached for multi-worker deployments.
