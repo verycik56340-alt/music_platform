@@ -36,7 +36,7 @@ def artist_detail(request, pk):
 
 @ratelimit(key='ip', rate='30/h', block=True)
 def album_detail(request, pk):
-    album = get_object_or_404(Album, pk=pk)
+    album = get_object_or_404(Album.objects.select_related('artist__user'), pk=pk)
     tracks = album.tracks.all()
 
     form = None
@@ -65,7 +65,11 @@ def album_detail(request, pk):
 
 @ratelimit(key='ip', rate='60/h', block=True)
 def track_detail(request, pk):
-    track = get_object_or_404(Track, pk=pk)
+    track = get_object_or_404(
+        Track.objects.select_related('album__artist__user')
+        .prefetch_related('featuring__user'),
+        pk=pk,
+    )
 
     form = None
     if request.user.is_authenticated:
